@@ -1,4 +1,4 @@
-const path = '/home/pi/nodejs/homeIoT/data/';
+const path = './data/';
 
 module.exports = (app, fs) => {
 
@@ -14,18 +14,29 @@ module.exports = (app, fs) => {
 	});
 
 	app.post('/device/:name', (req, res) => {
-		let device = {name: req.params.name, data: {}}
-		fs.writeFile(`${path}${req.params.name}.json`, JSON.stringify(device, null, '\t'), 'utf-8', (error,data) => {
+        let device = {name: req.params.name, data: {}};
+        fs.writeFile(`${path}${req.params.name}.json`, JSON.stringify(device, null, '\t'), 'utf-8', (error,data) => {
+            if(!_checkError(error)){
+		        res.json({"result": "fail"});
+                return;
+            }
 			res.json({"result": "success"});
 		});
 	});
 
 	app.put('/device/:name', (req, res) => {
 		fs.readFile(`${path}${req.params.name}.json`, (error,data) => {
+            if(!_checkError(error)){
+                res.json({"result": "fail"});
+                return;
+            }
 			let device = JSON.parse(data);
 			device["data"] = req.body;
-			console.log(device)
 			fs.writeFile(`${path}${req.params.name}.json`, JSON.stringify(device, null, '\t'), 'utf-8', (error,data) => {
+                if(!_checkError(error)){
+                    res.json({"result": "fail"});
+                    return;
+                }
 				res.json({"result": "success"});
 			});
 		});
@@ -34,15 +45,29 @@ module.exports = (app, fs) => {
 
 	app.get('/device/:name', (req, res) => {
 		fs.readFile(`${path}${req.params.name}.json`, (error,data) => {
+            if(!_checkError(error)){
+                res.json({"result": "fail"});
+                return;
+            }
 			let device = JSON.parse(data);
 			res.json(device);
-			console.log("get");
 		});
 	});
 
 	app.delete('/device/:name', (req, res) => {
-		fs.unlink(`${path}${req.params.name}.json`, () => {
+		fs.unlink(`${path}${req.params.name}.json`, (error) => {
+            if(!_checkError(error)){
+                res.json({"result": "fail"});
+                return;
+            }
 			res.json({"result": "success"});
 		});
 	});
+}
+
+function _checkError(error){
+    if(error === null)
+        return true;
+    else
+        return false;
 }
